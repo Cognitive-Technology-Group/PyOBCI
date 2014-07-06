@@ -67,6 +67,6 @@ class UDPServer(object):
 args = parser.parse_args()
 obci = open_bci.OpenBCIBoard(args.serial, int(args.baud))
 if args.filtering_data:
-  obci.filter_data = True
+  obci.filtering_data = True
 sock_server = UDPServer(args.host, int(args.port), args.json)
 obci.start_streaming(sock_server.handle_sample)
