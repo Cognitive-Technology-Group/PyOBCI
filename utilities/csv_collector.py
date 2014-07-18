@@ -3,8 +3,11 @@
 import time
 import threading
 import csv
-from open_bci import *
 from multiprocessing import Process
+import sys
+
+sys.path.append('..')
+from open_bci import *
 
 #'/dev/tty.usbmodemfd121'
 #Notes for using csv_collector.py
@@ -64,10 +67,10 @@ class CSVCollector(object):
         self.csv_writer = csv.DictWriter(self.file, self.fieldnames)
         self.csv_writer.writeheader()
         #create a new thread in which the OpenBCIBoard object will stream data
-        self.bg_thread = threading.Thread(target=self.board.start, 
-                                        args=(self.receive_sample, ))
-        #self.bg_thread = Process(target=self.board.start_streaming,
-        #                         args=(self.receive_sample, ))
+        # self.bg_thread = threading.Thread(target=self.board.start, 
+        #                                 args=(self.receive_sample, ))
+        self.bg_thread = Process(target=self.board.start,
+                                args=(self.receive_sample, ))
         
         self.bg_thread.start()
 
