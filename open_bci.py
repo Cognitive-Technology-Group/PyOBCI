@@ -24,6 +24,21 @@ START_BYTE = bytes(0xA0)  # start of data packet
 END_BYTE = bytes(0xC0)  # end of data packet
 
 
+def find_port():
+    import platform, glob
+
+    s = platform.system()
+    if s == 'Linux':
+        p = glob.glob('/dev/ttyACM*')
+        
+    elif s == 'Darwin':
+        p = glob.glob('/dev/tty.usbmodemfd*')
+
+    if len(p) >= 1:
+        return p[0]
+    else:
+        return None
+        
 class OpenBCIBoard(object):
   """
 
@@ -35,7 +50,12 @@ class OpenBCIBoard(object):
 
   """
 
-  def __init__(self, port='/dev/tty.usbmodemfd121', baud=115200, filter_data=True):
+  def __init__(self, port=None, baud=115200, filter_data=True):
+    if not port:
+      port = find_port()
+      if not port:
+        raise OSError('Cannot find OpenBCI port')
+        
     self.ser = serial.Serial(port, baud)
     self.dump_registry_data()
     self.streaming = False

@@ -20,7 +20,7 @@ from open_bci import *
 class CSVCollector(object):
 
     def __init__(self, fname = 'collect.csv',
-                 port='COM9', baud=115200):
+                 port=None, baud=115200):
         self.board = OpenBCIBoard(port, baud)
         self.fname = fname
         self.counter = 0

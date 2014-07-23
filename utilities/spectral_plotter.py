@@ -25,7 +25,7 @@ bp = mne.filter.band_pass_filter
 
 class SpectralPlotter(object):
 
-    def __init__(self, port='/dev/ttyACM0', baud=115200):
+    def __init__(self, port=None, baud=115200):
         self.board = OpenBCIBoard(port, baud)
         self.bg_thread = None
         self.bg_draw_thread = None
