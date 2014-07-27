@@ -48,7 +48,7 @@ class RawPlotter(object):
         for i in range(8):
             #subplot(8, 1, i+1)
             signal = self.data[..., i]
-            signal[~np.isnan(signal)] = 0
+            signal[np.isnan(signal)] = 0
             #signal = signal * np.hamming(len(signal))
             # fourier = np.fft.rfft(signal)
             # freq = np.fft.rfftfreq(signal.size, d=1.0/250.0)
