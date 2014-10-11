@@ -56,7 +56,7 @@ class RawPlotter(object):
             # plot(freq, np.log(abs(fourier)), label=str(i+1))
             
             #title('channel {0}'.format(i+1))
-        ylim([-0.0005, 0.0005])
+        # ylim([-0.0005, 0.0005])
         # ylim([-12, 0])
         legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                ncol=4, mode="expand", borderaxespad=0.)
@@ -103,3 +103,6 @@ class RawPlotter(object):
         
         self.background_plot()
 
+if __name__ == '__main__':
+    plotter = RawPlotter('/dev/ttyACM0')
+    plotter.start()

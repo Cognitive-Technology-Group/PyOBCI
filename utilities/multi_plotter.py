@@ -48,11 +48,13 @@ class MultiPlotter(object):
         fs = len(self.times) / (self.times[-1] - self.times[0])
         signal = self.data[..., self.plot_channel-1]
         signal = signal[~np.isnan(signal)]
-        signal = bp(signal, fs, 2, 55)
+        signal[abs(signal) > 0.005] = 0
+        # signal = bp(signal, fs, 2, 55)
 
         plt.clf()
         subplot(2, 2, 1)
-        plot(signal)
+        plot(signal[-400:])
+        ylim([-0.001, 0.001])
 
         subplot(2, 2, 3)
         fourier = np.fft.rfft(signal)
@@ -116,3 +118,8 @@ class MultiPlotter(object):
         self.should_plot = True
 
         self.background_plot()
+
+
+if __name__ == '__main__':
+    plotter = MultiPlotter()
+    plotter.start(4)

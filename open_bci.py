@@ -87,8 +87,9 @@ class OpenBCIBoard(object):
     while self.streaming:
       #data = self.ser.readline()
       data = self._read_serial_binary()
-      sample = OpenBCISample(data)
-      callback(sample)
+      if data[0] > 2:
+          sample = OpenBCISample(data)
+          callback(sample)
 
   """
 

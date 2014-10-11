@@ -107,3 +107,7 @@ class SpectralPlotter(object):
 
 
         self.background_plot()
+
+if __name__ == '__main__':
+    plotter = SpectralPlotter()
+    plotter.start(1)
