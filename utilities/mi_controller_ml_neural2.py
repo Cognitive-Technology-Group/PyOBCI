@@ -30,9 +30,9 @@ OPENBCI_PORT = '/dev/ttyACM0'
 TEENSY_PORT = '/dev/ttyACM1'
 TEENSY_ENABLED = False
 
-look_back = 30
+look_back = 15
 
-box_width = 250
+box_width = 125 # 250
 
 M = 30
 r = 250
@@ -60,7 +60,7 @@ def extract_features(data):
         fourier2 = np.fft.fft(conv2)
         features = np.hstack([features, np.abs(fourier), np.abs(fourier1), np.abs(fourier2)])
         # not sure if this is a good idea -->
-        # features = np.hstack([features, np.angle(fourier), np.angle(fourier1), np.angle(fourier2)])
+        features = np.hstack([features, np.angle(fourier), np.angle(fourier1), np.angle(fourier2)])
 
         
     return features
@@ -145,7 +145,7 @@ class MIPlotter(object):
 
             
         # control = control_arr.mean()
-        control_f = 0.05 * control + 0.93 * self.control[-1] 
+        control_f = 0.1 * control + 0.9 * self.control[-1] 
 
         
         # control_f2 = 1 * control_f - 1 * self.control[-1]

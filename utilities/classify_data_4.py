@@ -25,18 +25,20 @@ from pybrain.supervised.trainers import BackpropTrainer, RPropMinusTrainer
 from pybrain.structure.modules   import SoftmaxLayer
 from pybrain.datasets import SupervisedDataSet
 
-d = pandas.read_csv("motor_data_pierre.csv")
+import sklearn.cluster
+
+d = pandas.read_csv("motor_data_derrick.csv")
 d = d.dropna()
 d = d.reset_index(drop=True)
 
-M = 30
+M = 25
 r = 250 # sampling rate
 f1, f2 = 10, 22
 
 wavelet1 = signal.morlet(M, w=(f1*M)/(2.0*r))
 wavelet2 = signal.morlet(M, w=(f2*M)/(2.0*r))
 
-box_width = 125
+box_width = 250
 
 features_arr = np.zeros( (len(d.index), # rows
                           # cols, FFT len * n_signals * n_wavelets * 1 (abs, no angle)
@@ -96,20 +98,46 @@ def fisher_criterion(X, y, a, b):
     return top / bottom
 
 # time embed the features n times, spaced k apart
-def time_embed(features, k, n):
+def time_embed(features, y, k, n):
     total = n*k
     out = features[total:,]
     for i in range(n-1, -1, -1):
         current = i*k
         left = total - current
         out = np.hstack([out, features[current:-left]])
-    return out
+    return out, y[total:]
 
-X = features_arr[box_width:-1]
-y = np.array(d.tag[box_width:-1])
+def fish_good_features(X, y, a, b, n):
+    n_fish_features = 100
+    fish = fisher_criterion(X, y, a, b)
+    cutoff = np.sort(fish)[-n:][0]
+    good_features = fish >= cutoff
+    return good_features
 
-N_train = 12000
-N_test_end = 20000
+def remove_corr_good(X, threshold):
+    corr = np.corrcoef(X.T)
+    c = corr > 0.92
+    good_features2 = np.ones(c.shape[0], dtype=bool)
+
+    n_fish_features = c.shape[0]
+
+    for i in range(n_fish_features):
+        s = sum(c[i][good_features2])
+        if s > 1:
+            good_features2[i] = False
+
+    return good_features2
+
+X = features_arr[box_width:]
+y = np.array(d.tag[box_width:])
+
+
+
+
+
+N_train = 14000
+# N_test_end = 20000
+N_test_end = N_train + 6000
 
 # print("first round")
 # n_fish_features = 400
@@ -124,82 +152,19 @@ N_test_end = 20000
 # y = y[(n*k):]
 
 print("fisher features")
-# n_boxes = X.shape[1] / box_width
-# n_fish_features_per_box = 3
-# n_fish_features = n_boxes * n_fish_features_per_box
-n_fish_features = 800
-
-fish = fisher_criterion(X[:N_test_end,], y[:N_test_end], -1, 1)
-# fish = fisher_criterion(X, y, -1, 1)
-
-cutoff = np.sort(fish)[-n_fish_features:][0]
-good_features = fish >= cutoff
-
-
-# print("good features")
-good_indexes = np.arange(X.shape[1])
-
-# ETC = ExtraTreesClassifier()
-# ETC.fit(X[:N_test_end], y[:N_test_end])
-# n_fish_features = 100
-# cutoff = np.sort(ETC.feature_importances_)[-n_fish_features:][0]
-# good_features = ETC.feature_importances_ >= cutoff
-
-good_indexes = good_indexes[good_features]
-
-# good_features = np.random.choice(X.shape[1], n_fish_features)
-
+good_features = fish_good_features(X[:N_train,], y[:N_train], -1, 1, 100)
 X_new = X[..., good_features]
 
 print("correlation")
-corr = np.corrcoef(X_new.T)
-c = corr > 0.85
-good_features2 = np.ones(n_fish_features, dtype=bool)
-
-
-for i in range(n_fish_features):
-    s = sum(c[i][good_features2])
-    if s > 1:
-        good_features2[i] = False
-
-good_indexes = good_indexes[good_features2]
-
+good_features2 = remove_corr_good(X_new, 0.92)
 X_new = X_new[..., good_features2]
 
 print(X_new.shape[1])
 
-print("good features")
+print("fisher features again")
+good_features = fish_good_features(X_new[:N_train,], y[:N_train], -1, 1, 15)
+X_new = X_new[..., good_features]
 
-n_fish_features = 15
-
-fish = fisher_criterion(X_new[:N_test_end,], y[:N_test_end], -1, 1)
-# fish = fisher_criterion(X_new, y, -1, 1)
-
-cutoff = np.sort(fish)[-n_fish_features:][0]
-good_features = fish >= cutoff
-
-
-# ETC = ExtraTreesClassifier()
-# ETC.fit(X_new[:N_test_end], y[:N_test_end])
-# n_fish_features = 20
-# cutoff = np.sort(ETC.feature_importances_)[-n_fish_features:][0]
-# good_features = ETC.feature_importances_ >= cutoff
-
-good_indexes = good_indexes[good_features]
-
-# good_features = np.random.choice(X.shape[1], n_fish_features)
-
-X_new = X[..., good_features]
-print(X_new.shape[1])
-
-
-print(np.array(feature_names)[good_indexes])
-# n_fish_features = 15
-# # fish = fisher_criterion(X[:N_train,], y[:N_train], -1, 1)
-# fish = fisher_criterion(X_new[:N_train], y[:N_train], -1, 1)
-# cutoff = np.sort(fish)[-n_fish_features:][0]
-# good_features = fish >= cutoff
-# X_new = X_new[..., good_features]
 
 # # good_features = ETC.feature_importances_ >= 0.003
 
@@ -221,12 +186,26 @@ print(n_features)
 # # clf = svm.SVC()
 # # clf.fit(X_new, y)
 
-# neigh = KNeighborsClassifier(n_neighbors=2, weights='distance')
+# neigh = KNeighborsClassifier(n_neighbors=10, weights='distance')
 # scores = cross_validation.cross_val_score(neigh, X_new, y, cv=5)
 # print(scores)
-# neigh.fit(X_new[:N_train], y[:N_train])
-# pred = neigh.predict(X_new)
+# # neigh.fit(X_new, y)
+print("unsupervised learning")
+# model = sklearn.cluster.MiniBatchKMeans(n_clusters=100, reassignment_ratio=0.05)
+model = sklearn.cluster.DBSCAN()
+# model = sklearn.cluster.AffinityPropagation()
+# model = sklearn.cluster.AgglomerativeClustering(n_clusters = 3)
+clusters = model.fit_predict(X_new)
 
+print("time embedding")
+# y_train = (y[:N_train] == 0).astype(float)
+k, n = 50, 20
+# y_train = y[:N_train].astype(float)
+c2_train, y2_train = time_embed(clusters[:N_train, np.newaxis], y[:N_train], k, n)
+c2_test, y2_test = time_embed(clusters[N_train:, np.newaxis], y[N_train:], k, n)
+c2_all, y2_all = time_embed(clusters[:, np.newaxis], y, k, n)
+y = y2_all
+n_features = c2_all.shape[1]
 # good_features = ETC.feature_importances_ >= 0.0005
 # print(np.sum(good_features))
 # X_new2 = X[..., good_features]
@@ -249,30 +228,34 @@ all_data = ClassificationDataSet(n_features, 1, nb_classes=2)
 # test_data = SupervisedDataSet(n_features, 1)
 # all_data = SupervisedDataSet(n_features, 1)
 
-target = (y == 1) * 1
+t_train = (y2_train == 1) * 1
+t_test = (y2_test == 1) * 1
+t_all = (y2_all == 1) * 1
+
+# target = (y2 == 1) * 1
 # target = y + 1
 # target = y
 
-for i in xrange(N_train):
-    if y[i] != 0:
-        train_data.addSample(X_new[i,], [target[i]])
+for c, yy, t in zip(c2_train, y2_train, t_train):
+    if yy != 0:
+        train_data.addSample(c, [t])
 
-for i in xrange(N_train+1, N_test_end):
-    if y[i] != 0:
-        test_data.addSample(X_new[i,], [target[i]])
+for c, yy, t in zip(c2_test, y2_test, t_test):
+    if yy != 0:
+        test_data.addSample(c, [t])
 
-for i in xrange(X_new.shape[0]):
-    all_data.addSample(X_new[i,], [target[i]])
+for c, yy, t in zip(c2_all, y2_all, t_all):
+    # if yy != 0:
+    all_data.addSample(c, [t])
 
 train_data._convertToOneOfMany()
 test_data._convertToOneOfMany()
 all_data._convertToOneOfMany()
 
 print("building")
-fnn = buildNetwork( train_data.indim, 6, train_data.outdim, fast=True,
+fnn = buildNetwork( train_data.indim, 15, train_data.outdim, fast=True,
                     outclass = SoftmaxLayer)
-# trainer = BackpropTrainer( fnn, dataset=train_data, momentum=0.2, verbose=True, learningrate=0.05, lrdecay=1.0)
-trainer = BackpropTrainer( fnn, dataset=train_data, momentum=0.2, verbose=True, learningrate=0.01, lrdecay = 1.0)
+trainer = BackpropTrainer( fnn, dataset=train_data, momentum=0.2, verbose=True, learningrate=0.05, lrdecay=1.0)
 # trainer = RPropMinusTrainer( fnn, dataset=train_data, momentum=0.1, verbose=True, learningrate=0.01, lrdecay=1.0)
 
 # trainer.trainUntilConvergence()
@@ -285,7 +268,7 @@ for i in range(5):
     trainer.trainEpochs(1)
 
     print("testing")
-    trnresult = trainer.testOnData()
+    # trnresult = trainer.testOnData()
     tstresult = trainer.testOnData( dataset=test_data )
 
     if tstresult < best_test:
@@ -293,8 +276,8 @@ for i in range(5):
         best_test = tstresult
 
     print "epoch: %4d" % trainer.totalepochs, \
-        "  train error: %.3f" % trnresult, \
         "  test error: %.3f" % tstresult
+        # "  train error: %.3f" % trnresult, \
 
     # if tstresult <= 0.14:
     #     break
@@ -311,16 +294,15 @@ print("test", tstresult)
 print("testing more")
 probs = pred = fnn.activateOnDataset(all_data)
 
+
 # pred = pred[:, 0]
 
 probs = probs - probs.mean(0)
 pred = probs.argmax(1)
 pred = pred * 2 - 1
+# pred = pred - 1
 
-# # pred = pred - 1
-
-
-smoother_len = 500
+smoother_len = 1000
 # smoother = np.repeat(1.0/smoother_len, smoother_len)
 smoother = np.exp(-0.001 * np.arange(0,smoother_len))
 
@@ -336,13 +318,13 @@ s = signal.convolve(s, smoother, 'same')
 #     p[:, i] = signal.convolve(probs[:,i], smoother, 'same')
 
 
-# s = s - s.mean()
+s = s - s.mean()
 # s2 = signal.wiener(s, 251)
 
 error = abs(s - y)
 index = np.arange(len(error))
 e_train = error[np.logical_and(index < N_train, y != 0)]
-e_test = error[np.logical_and(index >= N_test_end, y != 0)]
+e_test = error[np.logical_and(index >= N_train, y != 0)]
 
 print("RMS error on train", np.sqrt(e_train.mean()))
 print("RMS error on test", np.sqrt(e_test.mean()))
@@ -385,5 +367,3 @@ show(block=False)
 # joblib.dump([neigh, good_features], 'neighbors_model.pkl', compress=4)
 
 # neigh, good_features = joblib.load('neighbors_model.pkl')
-
-

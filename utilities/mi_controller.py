@@ -48,7 +48,7 @@ class MIPlotter(object):
 
         
         print("connecting to teensy...")
-        self.teensy = serial.Serial(TEENSY_PORT, 9600)
+        #self.teensy = serial.Serial(TEENSY_PORT, 9600)
         
         
     def stop(self):
@@ -154,7 +154,7 @@ class MIPlotter(object):
             
         self.out_sig = np.append(self.out_sig, out_sig)
 
-        self.teensy.write(str(out_sig))
+        # self.teensy.write(str(out_sig))
         
         # for i in range(4):
         #     plot(self.controls[-40:, i], label=str(i+1))

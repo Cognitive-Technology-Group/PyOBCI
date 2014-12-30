@@ -8,7 +8,7 @@ collector = CSVCollector(port='/dev/ttyACM0', fname='motor_data.csv')
 
 num_trials = 7
 
-d = [("left hand", -1), ("right hand", 1)] * num_trials
+d = [("up", 1), ("down", 2), ("left", 3), ("right", 4)] * num_trials
 random.shuffle(d)
 
 print("get ready...")

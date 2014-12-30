@@ -15,7 +15,7 @@ f1, f2 = 7, 14
 wavelet1 = signal.morlet(M, w=(f1*M)/(2.0*r))
 wavelet2 = signal.morlet(M, w=(f2*M)/(2.0*r))
 
-datafile = 'motor_data_tomas.csv'
+datafile = 'motor_data.csv'
 
 def extract_features(data):
     sigs = np.zeros((data.shape[0], 3))
@@ -55,7 +55,7 @@ def preprocess_data(d):
         features = extract_features(data)
         features_arr[i, ...] = features
 
-.    return features_arr
+    return features_arr
 
 
 print("reading csv...")

@@ -45,7 +45,7 @@ class RawPlotter(object):
 
         hold(True)
         
-        for i in range(8):
+        for i in [0]:
             #subplot(8, 1, i+1)
             signal = self.data[..., i]
             signal[np.isnan(signal)] = 0
@@ -73,7 +73,7 @@ class RawPlotter(object):
     def receive_sample(self, sample):
         t = time.time()
         sample = sample.channels
-        self.data = np.vstack( (self.data[-250:, ...], sample) )
+        self.data = np.vstack( (self.data[-1000:, ...], sample) )
 
         
     def start(self):

@@ -122,4 +122,4 @@ class MultiPlotter(object):
 
 if __name__ == '__main__':
     plotter = MultiPlotter()
-    plotter.start(4)
+    plotter.start(1)

@@ -78,7 +78,7 @@ class MIPlotter(object):
         self.eye_l = np.array([0])
 
         model, good_features = joblib.load('neighbors_model.pkl')
-        self.eye_l_temp, self.eye_r_temp = joblib.load('eye_blinks.pkl')
+        # self.eye_l_temp, self.eye_r_temp = joblib.load('eye_blinks.pkl')
         self.good_features = good_features
         self.model = model
         
@@ -136,11 +136,11 @@ class MIPlotter(object):
             out_sig = 500
 
 
-        r_max = np.max(signal.correlate(self.eye_r_temp, data[..., 6]))
-        l_max = np.max(signal.correlate(self.eye_l_temp, data[..., 7]))
+        # r_max = np.max(signal.correlate(self.eye_r_temp, data[..., 6]))
+        # l_max = np.max(signal.correlate(self.eye_l_temp, data[..., 7]))
 
-        self.eye_r = np.append(self.eye_r, r_max)
-        self.eye_l = np.append(self.eye_l, l_max)
+        # self.eye_r = np.append(self.eye_r, r_max)
+        # self.eye_l = np.append(self.eye_l, l_max)
         
         
         self.out_sig = np.append(self.out_sig, out_sig)
@@ -156,7 +156,7 @@ class MIPlotter(object):
         # plot(conv2)
             
         plot(self.control[-40:])
-        plot(self.out_sig[-40:] * 0.001)
+        # plot(self.out_sig[-40:] * 0.001)
 
         # plot(self.eye_l[-40:])
         # plot(self.eye_r[-40:])
