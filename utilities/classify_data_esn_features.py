@@ -15,7 +15,7 @@ from scipy.optimize import minimize
 
 from sklearn.neighbors import KNeighborsClassifier
 
-d = pandas.read_csv("motor_data_tomas.csv")
+d = pandas.read_csv("motor_data_tomas_4.csv")
 d = d.dropna()
 d = d.reset_index(drop=True)
 
@@ -125,7 +125,7 @@ import gc
 print("collected: %d" % gc.collect())
 
 ignore = 1000
-N_train = 10000
+N_train = 20000
 
 X = features_arr[box_width:]
 y = np.array(d.tag[box_width:])
@@ -134,7 +134,7 @@ good_indexes = np.arange(X.shape[1])
 
 print("fisher features")
 # good_features = fish_good_features(X[ignore:N_train,], y[ignore:N_train], -1, 1, 200)
-good_features = fish_good_features(X, y, -1, 1, 200)
+good_features = fish_good_features(X, y, 1, 2, 200)
 X_new = X[..., good_features]
 good_indexes = good_indexes[good_features]
 print(X_new.shape[1])
@@ -253,16 +253,16 @@ start = (0.03, 0.01, 0.9)
 
 # res = basinhopping(test_func, (0.03, 0.01, 0.9), disp=True, accept_test=bounds, stepsize=0.1)
 
-class AlgoAnneal(Annealer):
-    def move(self):
-        self.state += np.random.uniform(-0.5, 0.5, len(self.state))
-        self.state = np.clip(self.state, xmin, xmax)
-    def energy(self):
-        error = test_func(self.state, disp=False)
-        energy = exp(-(1/error))
-        return energy
-    def copy_state(self, state):
-        return np.copy(state)
+# class AlgoAnneal(Annealer):
+#     def move(self):
+#         self.state += np.random.uniform(-0.5, 0.5, len(self.state))
+#         self.state = np.clip(self.state, xmin, xmax)
+#     def energy(self):
+#         error = test_func(self.state, disp=False)
+#         energy = exp(-(1/error))
+#         return energy
+#     def copy_state(self, state):
+#         return np.copy(state)
 
 
 # algo = AlgoAnneal(start)       

@@ -4,6 +4,7 @@ import numpy as np
 from pprint import pprint
 from pylab import *
 
+
 d = pandas.read_csv("motor_data_tomas.csv")
 d = d.dropna()
 d = d.reset_index(drop=True)
